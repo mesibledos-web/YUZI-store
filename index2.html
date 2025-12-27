@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YUZI STORE Black Premium</title>
+<style>
+body { margin:0; font-family:'Arial',sans-serif; background:#000; color:#fff; }
+.container { max-width:480px; margin:auto; padding:20px; }
+h1,h3 { text-align:center; margin-bottom:15px; color:#fff; }
+.card { position:relative; background:#111; padding:20px; border-radius:16px; margin-bottom:20px; overflow:hidden; box-shadow:0 4px 20px rgba(255,255,255,0.1); transition:transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; }
+.card:hover { transform:translateY(-6px); box-shadow:0 12px 40px rgba(255,255,255,0.25); background: #1a1a1a; }
+.payment-card { background:#fff; color:#000; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+.payment-card a { color:#0077cc; text-decoration:none; }
+.payment-card a:hover { text-decoration:underline; }
+input, select, button { width:100%; padding:12px; margin-top:10px; border-radius:10px; border:none; background:#222; color:#fff; font-size:16px; transition:background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, color 0.2s ease; }
+input::placeholder { color:#aaa; }
+select option { background:#222; color:#fff; }
+button { background:#333; font-weight:bold; cursor:pointer; }
+button:hover { transform:scale(1.05); box-shadow:0 0 15px rgba(255,255,255,0.5); background: linear-gradient(45deg,#444,#555,#666); }
+button.red { background:#b91c1c; }
+button.red:hover { background: linear-gradient(45deg,#e11d48,#b91c1c); }
+button:active { background:#fff; color:#000; }
+.game-card { padding:12px; border-radius:12px; background:#111; box-shadow:0 2px 10px rgba(255,255,255,0.1); margin-top:10px; opacity:0; transform:translateY(10px); animation:fadeInUp 0.5s forwards; }
+@keyframes fadeInUp { to {opacity:1; transform:translateY(0);} }
+@media(max-width:480px){ .container{padding:15px} input,select,button{font-size:15px;padding:10px} h1{font-size:28px} h3{font-size:20px} }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>YUZI STORE</h1>
+
+<!-- ADMIN PANEL (Public) -->
+<div id="adminBox">
+<div class="card">
+<h3>⚙️ ADMIN PANEL</h3>
+<select id="game">
+  <option value="">--Pilih Game--</option>
+  <option value="Mobile Legends">Mobile Legends</option>
+  <option value="PUBG Mobile">PUBG Mobile</option>
+  <option value="Free Fire">Free Fire</option>
+  <option value="Genshin Impact">Genshin Impact</option>
+</select>
+<input id="nominal" placeholder="Nominal">
+<input id="harga" type="number" placeholder="Harga">
+<button onclick="save()">SIMPAN / UPDATE</button>
+<button class="red" onclick="hapus()">HAPUS</button>
+</div>
+
+<div class="card">
+<h3>💰 Margin Keuntungan (%)</h3>
+<input id="margin" type="number" placeholder="Contoh 10">
+<button onclick="setMargin()">SIMPAN</button>
+</div>
+
+<div class="card">
+<h3>📜 LOG ORDER</h3>
+<div id="logList"></div>
+<button onclick="clearLogs()" class="red">HAPUS LOG</button>
+<button onclick="exportLogs()">EXPORT LOG JSON</button>
+</div>
+</div>
+
+<!-- USER PANEL -->
+<div id="userBox">
+<div class="card">
+<h3>🛒 TOP UP GAME</h3>
+<input id="userId" placeholder="Masukkan User ID / Username / Email">
+<select id="userGame">
+  <option value="">--Pilih Game--</option>
+  <option value="Mobile Legends">Mobile Legends</option>
+  <option value="PUBG Mobile">PUBG Mobile</option>
+  <option value="Free Fire">Free Fire</option>
+  <option value="Genshin Impact">Genshin Impact</option>
+</select>
+<select id="userNominal">
+  <option data-game="Mobile Legends" value="100">100 Diamond</option>
+  <option data-game="Mobile Legends" value="500">500 Diamond</option>
+  <option data-game="Mobile Legends" value="1000">1000 Diamond</option>
+  <option data-game="Mobile Legends" value="2500">2500 Diamond</option>
+  <option data-game="Mobile Legends" value="5000">5000 Diamond</option>
+  <option data-game="Mobile Legends" value="10000">10000 Diamond</option>
+
+  <option data-game="PUBG Mobile" value="60">60 UC</option>
+  <option data-game="PUBG Mobile" value="300">300 UC</option>
+  <option data-game="PUBG Mobile" value="600">600 UC</option>
+  <option data-game="PUBG Mobile" value="1250">1250 UC</option>
+  <option data-game="PUBG Mobile" value="2600">2600 UC</option>
+  <option data-game="PUBG Mobile" value="5200">5200 UC</option>
+
+  <option data-game="Free Fire" value="50">50 Diamond</option>
+  <option data-game="Free Fire" value="140">140 Diamond</option>
+  <option data-game="Free Fire" value="355">355 Diamond</option>
+  <option data-game="Free Fire" value="720">720 Diamond</option>
+  <option data-game="Free Fire" value="1450">1450 Diamond</option>
+
+  <option data-game="Genshin Impact" value="160">160 Primogem</option>
+  <option data-game="Genshin Impact" value="450">450 Primogem</option>
+  <option data-game="Genshin Impact" value="980">980 Primogem</option>
+  <option data-game="Genshin Impact" value="1980">1980 Primogem</option>
+  <option data-game="Genshin Impact" value="3280">3280 Primogem</option>
+</select>
+<div id="priceBox"></div>
+<button onclick="order()">ORDER</button>
+<a href="https://wa.me/6285147769300" target="_blank">
+<button style="margin-top:10px; background:#25D366;">💚 BAYAR VIA WHATSAPP</button>
+</a>
+</div>
+
+<div class="card payment-card">
+<h3>💳 PEMBAYARAN</h3>
+<ul>
+<li>QRIS (All Payment)</li>
+<li>DANA / OVO</li>
+<li>WhatsApp: <a href="https://wa.me/6285147769300" target="_blank">+62 851-4776-9300</a></li>
+</ul>
+</div>
+</div>
+
+<script>
+// Dummy storage
+function save(){ alert('Simpan / Update game berhasil (dummy)'); }
+function hapus(){ alert('Hapus game berhasil (dummy)'); }
+function setMargin(){
+    const m = document.getElementById('margin').value;
+    if(!m) return alert('Isi margin terlebih dahulu!');
+    localStorage.setItem('margin', m);
+    alert('Margin disimpan: '+m+'%');
+}
+
+function clearLogs(){
+    localStorage.removeItem('orders');
+    displayOrders();
+}
+function exportLogs(){
+    let orders = [];
+    try{ orders=JSON.parse(localStorage.getItem('orders')) || []; }catch(e){ orders=[]; }
+    console.log(JSON.stringify(orders,null,2));
+    alert('Logs di-export ke console!');
+}
+
+function order(){
+    const userId=document.getElementById('userId').value;
+    const game=document.getElementById('userGame').value;
+    const nominal=document.getElementById('userNominal').value;
+    if(!userId||!game||!nominal){ alert('Lengkapi semua data!'); return; }
+    const confirmPay=confirm(`Silahkan bayar terlebih dahulu.\nMetode:\n- QRIS\n- DANA/OVO\n- WhatsApp: +62 851-4776-9300\nKlik OK jika sudah membayar.`);
+    if(!confirmPay){ alert('Order dibatalkan.'); return; }
+    const orderData={user:userId, game:game, nominal:nominal, status:'Sudah bayar', time:new Date().toLocaleString()};
+    let orders=[];
+    try{ orders=JSON.parse(localStorage.getItem('orders'))||[]; }catch(e){ orders=[]; }
+    orders.push(orderData);
+    localStorage.setItem('orders', JSON.stringify(orders));
+
+    const waNumber="6285147769300";
+    const message=encodeURIComponent(`📌 ORDER BARU\nUser: ${userId}\nGame: ${game}\nNominal: ${nominal}\nStatus: Sudah bayar`);
+    window.open(`https://wa.me/${waNumber}?text=${message}`, "_blank");
+
+    alert('Order berhasil dicatat dan dikirim ke admin!');
+    displayOrders();
+}
+
+function displayOrders(){
+    const logList=document.getElementById('logList');
+    logList.innerHTML='';
+    let orders=[];
+    try{ orders=JSON.parse(localStorage.getItem('orders'))||[]; }catch(e){ orders=[]; }
+    orders.forEach(order=>{
+        const div=document.createElement('div');
+        div.classList.add('game-card');
+        div.textContent=`[${order.time}] User: ${order.user} | Game: ${order.game} | Nominal: ${order.nominal} | Status: ${order.status}`;
+        logList.appendChild(div);
+    });
+}
+
+// Filter nominal sesuai game
+const userGame=document.getElementById('userGame');
+const userNominal=document.getElementById('userNominal');
+userGame.addEventListener('change',()=>{
+    const game=userGame.value;
+    const options=userNominal.querySelectorAll('option');
+    options.forEach(opt=>{ opt.hidden=(opt.dataset.game!==game); });
+    userNominal.value="";
+});
+
+// Tampilkan log saat load
+document.addEventListener('DOMContentLoaded',()=>{ displayOrders(); });
+</script>
+
+</body>
+</html>
