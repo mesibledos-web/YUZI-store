@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - YUZI Store</title>
+
+<style>
+body{
+  background:#020617;
+  color:#fff;
+  font-family:Arial;
+  margin:0;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+h1{
+  text-align:center;
+  color:#22c55e;
+}
+.card{
+  background:#020617;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 0 15px rgba(0,255,255,.3);
+}
+input,select,button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#22c55e;
+  font-weight:bold;
+  cursor:pointer;
+}
+button.red{
+  background:#ef4444;
+}
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>ADMIN PANEL</h1>
+
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+  <input id="password" type="password" placeholder="Password Admin">
+  <button onclick="login()">LOGIN</button>
+</div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="hidden">
+
+<div class="card">
+<label>Game</label>
+<select id="game"></select>
+
+<label>Nominal</label>
+<input id="nominal" placeholder="Contoh: 70 Diamond">
+
+<label>Harga</label>
+<input id="harga" type="number" placeholder="10000">
+
+<button onclick="save()">SIMPAN / UPDATE</button>
+<button class="red" onclick="hapus()">HAPUS</button>
+</div>
+
+<div class="card">
+<button onclick="logout()">LOGOUT</button>
+</div>
+
+</div>
+</div>
+
+<script>
+/* PASSWORD ADMIN */
+const ADMIN_PASS = "yuzi123";
+
+/* DATA DEFAULT */
+const defaultData = {
+  FF: {"70 Diamond":10000,"140 Diamond":20000,"355 Diamond":50000},
+  ML: {"86 Diamond":20000,"172 Diamond":38000,"257 Diamond":56000},
+  PUBG: {"60 UC":15000,"180 UC":45000,"600 UC":135000}
+};
+
+/* LOAD DATA */
+let data = JSON.parse(localStorage.getItem("YUZI_DATA")) || defaultData;
+
+/* LOGIN */
+function login(){
+  if(password.value === ADMIN_PASS){
+    loginBox.style.display="none";
+    adminBox.classList.remove("hidden");
+    init();
+  }else alert("Password salah!");
+}
+
+/* LOGOUT */
+function logout(){
+  location.reload();
+}
+
+/* INIT */
+function init(){
+  game.innerHTML="";
+  Object.keys(data).forEach(g=>{
+    let o=document.createElement("option");
+    o.textContent=g;
+    game.appendChild(o);
+  });
+}
+
+/* SAVE */
+function save(){
+  if(!data[game.value]) data[game.value]={};
+  data[game.value][nominal.value]=Number(harga.value);
+  localStorage.setItem("YUZI_DATA",JSON.stringify(data));
+  alert("Berhasil disimpan!");
+}
+
+/* DELETE */
+function hapus(){
+  delete data[game.value][nominal.value];
+  localStorage.setItem("YUZI_DATA",JSON.stringify(data));
+  alert("Berhasil dihapus!");
+}
+</script>
+
+</body>
+</html>
