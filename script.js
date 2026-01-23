@@ -4,7 +4,7 @@ const input = document.getElementById("input");
 /* ================================
    🔑 API KEY GEMINI
 ================================ */
-const API_KEY = "AIzaSyBpYtlmilyRJsFWhmliiH2SUunnSmPqYKE";
+const API_KEY = "AIzaSyB7WI_tFPnpa1_AyDpiNtOhoXkzZoihANo";
 /* ================================ */
 
 const API_URL =
