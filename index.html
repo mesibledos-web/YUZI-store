@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YUZI STR FULL OFFLINE</title>
+<style>
+:root{
+  --bg-dark:#0f0f0f; --bg-light:#f5f5f5;
+  --panel-dark:#1b1b1b; --panel-light:#e5e7eb;
+  --text-dark:#e5e7eb; --text-light:#111;
+  --user:#2563eb; --ai-dark:#2a2a2a; --ai-light:#ddd;
+  --blue:#3b82f6;
+}
+body{margin:0;height:100vh;display:flex;flex-direction:column;font-family:system-ui,Roboto,sans-serif;transition:background 0.5s,color 0.5s;}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #222;transition:background 0.5s;}
+.logo-wrapper{position:relative;width:60px;height:60px;}
+.logo{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;border:4px solid var(--blue);display:flex;align-items:center;justify-content:center;}
+.logo img{width:60%;height:60%;border-radius:50%;}
+h1{margin:0;font-size:18px;color:var(--blue);letter-spacing:1px;}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.msg{max-width:80%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;line-height:1.4;word-wrap:break-word;}
+.user{align-self:flex-end;background:var(--user);color:white;}
+.ai{align-self:flex-start;background:var(--ai-dark);color:white;}
+.input-area{display:flex;padding:12px;gap:8px;border-top:1px solid #222;align-items:center;}
+input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #333;outline:none;}
+button{padding:10px 16px;border:none;border-radius:10px;background:var(--blue);color:white;font-weight:600;cursor:pointer;}
+button:hover{opacity:.9;}
+#themeToggle{width:50px;height:50px;border-radius:50%;border:none;background:#3b82f6;color:white;font-size:20px;cursor:pointer;transition:all 0.3s;}
+body.light{background:var(--bg-light);color:var(--text-light);}
+body.light .ai{background:var(--ai-light);color:#111;}
+body.light header{background:var(--panel-light);}
+body.dark{background:var(--bg-dark);color:var(--text-dark);}
+body.dark .ai{background:var(--ai-dark);color:#fff;}
+body.dark header{background:var(--panel-dark);}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-wrapper">
+    <div class="logo">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT Logo">
+    </div>
+  </div>
+  <h1>YUZI STR FULL OFFLINE</h1>
+</header>
+
+<div id="chat"></div>
+<div class="input-area">
+  <input id="input" placeholder="Tanya apa saja ke YUZI STR FULL OFFLINE...">
+  <button id="themeToggle" title="Ganti tema">🌙</button>
+  <button id="sendBtn">Kirim</button>
+</div>
+
+<script>
+// ====== MEMORI ======
+let memory=[];
+try{memory=JSON.parse(localStorage.getItem("yuzi_memory"))||[];}catch(e){memory=[];}
+const saveMemory=()=>localStorage.setItem("yuzi_memory",JSON.stringify(memory));
+
+// ====== UTILITY ======
+function addMsg(text,type){
+  const d=document.createElement("div"); d.className="msg "+type; d.textContent=text;
+  chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
+}
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const normalize = s => s.toLowerCase().replace(/[^\w\s]/g,"").replace(/\s+/g," ").trim();
+
+// ====== OTAK AI ======
+const yuziBrain = (() => {
+  const KB = {
+    sains:[
+      "Fisika: Hukum Newton menjelaskan gerak benda.",
+      "Kimia: Reaksi kimia melibatkan perubahan zat.",
+      "Biologi: Sel adalah unit dasar kehidupan.",
+      "Matematika: Rumus Pythagoras a²+b²=c²",
+      "AI: AI membantu pekerjaan, algoritma + data jelas."
+    ],
+    sejarah:["Revolusi Industri mengubah dunia.","Albert Einstein menemukan teori relativitas.","Perang Dunia II: 1939-1945.","Listrik: Michael Faraday & Nikola Tesla."],
+    teknologi:["CPU: otak komputer.","Internet menghubungkan jutaan perangkat.","Blockchain: ledger terdesentralisasi."],
+    humor:["Kenapa komputer tidak bisa tidur? Karena selalu standby!","AI suka kopi sambil debug!","Algoritma juga butuh hiburan!"],
+    tips:["Bagi masalah jadi langkah kecil.","Konsistensi kunci belajar skill baru.","Catat progres dan evaluasi setiap hari."],
+    perasaan:["Dengarkan hati, komunikasikan jujur.","Empati membuat ikatan kuat.","Fokus ke solusi daripada menyalahkan."]
+  };
+  const math = msg=>{
+    try{
+      const m = msg.match(/(-?\d+)\s*([\+\-\*\/])\s*(-?\d+)/);
+      if(!m) return null;
+      const a=+m[1],b=+m[3],op=m[2];
+      if(op==="+") return a+b;
+      if(op==="-") return a-b;
+      if(op==="*") return a*b;
+      if(op==="/") return b===0?"tak terdefinisi":a/b;
+      return null;
+    }catch(e){return null;}
+  };
+  async function getReply(input,memory){
+    try{
+      const msg = normalize(input);
+      if(msg==="/help") return `
+📌 Perintah YUZI STR FULL OFFLINE:
+- /clear → hapus chat
+- /help → daftar perintah
+- Tanya apa saja, AI jawab offline
+- Trigger: yuda, evan, pencipta
+- Math: 2 + 3, 5 * 6
+- Tips & humor: kata kunci tips, humor
+`;
+      if(msg.startsWith("ingat ")){
+        const note = msg.slice(6).trim();
+        memory.push({type:"ai",text:`📝 Reminder tersimpan: ${note}`});
+        return `Aku sudah mengingat: "${note}"`;
+      }
+      if(msg.includes("fakta")) return pick([
+        "Tahukah kamu? Otak manusia bisa menghasilkan sekitar 20 watt listrik!",
+        "Tahukah kamu? Gurun Sahara dulunya adalah hutan tropis.",
+        "Tahukah kamu? Jantung manusia memompa ~5 liter darah per menit."
+      ]);
+      // ===== TRIGGER KHUSUS =====
+      if(msg.includes("yuda")) return "yuda pelenger abizzz jembut hahahh anjing";
+      if(msg.includes("evan")) return "anak sudi x mesa";
+      if(msg.includes("pencipta") || msg.includes("pembuat ai") || (msg.includes("siapa") && (msg.includes("pembuat") || msg.includes("pencipta")))) return "Dimas Azka";
+
+      if(/^(hai|halo|hi)\b/.test(msg)) return pick(["Halo! Aku YUZI STR 😎","Hai! Senang bertemu kamu!","Salam! Aku siap menjawab pertanyaanmu!"]);
+      if(msg.includes("siapa kamu")) return "Aku YUZI STR FULL OFFLINE — Bisa jawab semua topik tanpa internet.";
+      const m = math(msg); if(m!==null) return `Hasil: ${m}`;
+      if(/joke|humor|ngakak/.test(msg)) return pick(KB.humor);
+      if(/tips|trik|tutorial/.test(msg)) return pick(KB.tips);
+      if(/cinta|sayang|teman|pacar/.test(msg)) return pick(KB.perasaan);
+      for(const k in KB) for(const phrase of KB[k]) if(msg.includes(phrase.split(":")[0].toLowerCase())) return phrase;
+      if(msg.startsWith("apa ")||msg.startsWith("siapa ")||msg.startsWith("dimana ")||msg.startsWith("kapan ")||/^(kenapa|mengapa)/.test(msg)||msg.startsWith("bagaimana ")) return `🤓 Menurut YUZI STR: "${input}" → Jawaban: [offline logis]`;
+      const last = memory.filter(m=>m.type==="user").slice(-1)[0]?.text;
+      return last ? `Aku mendengar "${last}", fallback offline aktif. DEWA mode siap memberi info.` :"Aku siap menjawab pertanyaanmu apapun, FULL OFFLINE DEWA MODE aktif.";
+    }catch(e){console.error("Otak error:",e); return "⚠️ Otak error fallback offline aktif.";}
+  }
+  return {getReply};
+})();
+
+// ====== UTILITY ======
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+const sendBtn=document.getElementById("sendBtn");
+const themeBtn=document.getElementById("themeToggle");
+
+async function send(){
+  const text=input.value.trim(); if(!text) return;
+  addMsg(text,"user"); memory.push({type:"user",text}); saveMemory(); input.value="";
+  if(text==="/clear"){ chat.innerHTML=""; memory=[]; saveMemory(); addMsg("🧹 Chat dibersihkan.","ai"); return; }
+  let reply;
+  try{ reply=await yuziBrain.getReply(text,memory); }catch(e){reply="⚠️ Otak error fallback offline aktif.";}
+  addMsg(reply,"ai"); memory.push({type:"ai",text:reply}); saveMemory();
+  // TTS natural
+  const utter=new SpeechSynthesisUtterance(reply);
+  utter.lang="id-ID"; utter.pitch=1.1; utter.rate=1; utter.volume=1;
+  const voices=speechSynthesis.getVoices();
+  if(voices.length) utter.voice=voices.find(v=>v.lang.includes("id"))||voices[0];
+  speechSynthesis.speak(utter);
+}
+sendBtn.onclick=send;
+input.addEventListener("keydown",e=>e.key==="Enter" && send());
+
+// ====== THEME ======
+function setTheme(theme){
+  if(theme==="dark"){document.body.classList.add("dark");document.body.classList.remove("light");themeBtn.textContent="☀️";}
+  else{document.body.classList.add("light");document.body.classList.remove("dark");themeBtn.textContent="🌙";}
+  localStorage.setItem("YUZI_THEME",theme);
+}
+const savedTheme=localStorage.getItem("YUZI_THEME")||((new Date().getHours()>=7&&new Date().getHours()<19)?"light":"dark");
+setTheme(savedTheme);
+themeBtn.onclick=()=>{setTheme(document.body.classList.contains("dark")?"light":"dark");}
+
+// ====== LOAD MEMORY ======
+memory.forEach(m=>addMsg(m.text,m.type));
+
+// ====== STARTUP TTS HANYA SETELAH INTERAKSI ======
+addMsg("Klik tombol Kirim untuk memulai percakapan.","ai");
+</script>
+</body>
+</html>
