@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YUZI STR FULL OFFLINE</title>
+<title>YUZI STR FULL OFFLINE - Secure</title>
 <style>
 :root{
   --bg-dark:#0f0f0f; --bg-light:#f5f5f5;
@@ -53,74 +53,67 @@ body.dark header{background:var(--panel-dark);}
 </div>
 
 <script>
-// ====== MEMORI ======
+// ===== MEMORI =====
 let memory=[];
 try{memory=JSON.parse(localStorage.getItem("yuzi_memory"))||[];}catch(e){memory=[];}
 const saveMemory=()=>localStorage.setItem("yuzi_memory",JSON.stringify(memory));
 
-// ====== UTILITY ======
+// ===== BLOCK SYSTEM =====
+let blockedUsers=[];
+try{blockedUsers = JSON.parse(localStorage.getItem("blockedUsers"))||[];}catch(e){blockedUsers=[];}
+const saveBlocked = ()=>localStorage.setItem("blockedUsers", JSON.stringify(blockedUsers));
+function isBlocked(text){
+  const badWords = ["bodoh ai","sialan ai","brengsek","anjing","tolol","goblok","dungu","caci","bego","gila","jelek ai"];
+  const msg = text.toLowerCase();
+  for(const w of badWords){ if(msg.includes(w)) return true; }
+  return false;
+}
+
+// ===== RATE LIMIT =====
+let lastSent=0;
+const RATE_LIMIT = 1000; // ms per message
+let lockUntil = 0;
+
+// ===== UTILITY =====
 function addMsg(text,type){
   const d=document.createElement("div"); d.className="msg "+type; d.textContent=text;
   chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
 }
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const normalize = s => s.toLowerCase().replace(/[^\w\s]/g,"").replace(/\s+/g," ").trim();
+function escapeInput(text){ return text.replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-// ====== OTAK AI ======
+// ===== OTAK AI =====
 const yuziBrain = (() => {
   const KB = {
-    sains:[
-      "Fisika: Hukum Newton menjelaskan gerak benda.",
-      "Kimia: Reaksi kimia melibatkan perubahan zat.",
-      "Biologi: Sel adalah unit dasar kehidupan.",
-      "Matematika: Rumus Pythagoras a²+b²=c²",
-      "AI: AI membantu pekerjaan, algoritma + data jelas."
-    ],
+    sains:["Fisika: Hukum Newton menjelaskan gerak benda.","Kimia: Reaksi kimia melibatkan perubahan zat.","Biologi: Sel adalah unit dasar kehidupan.","Matematika: Rumus Pythagoras a²+b²=c²","AI: AI membantu pekerjaan, algoritma + data jelas."],
     sejarah:["Revolusi Industri mengubah dunia.","Albert Einstein menemukan teori relativitas.","Perang Dunia II: 1939-1945.","Listrik: Michael Faraday & Nikola Tesla."],
     teknologi:["CPU: otak komputer.","Internet menghubungkan jutaan perangkat.","Blockchain: ledger terdesentralisasi."],
     humor:["Kenapa komputer tidak bisa tidur? Karena selalu standby!","AI suka kopi sambil debug!","Algoritma juga butuh hiburan!"],
     tips:["Bagi masalah jadi langkah kecil.","Konsistensi kunci belajar skill baru.","Catat progres dan evaluasi setiap hari."],
     perasaan:["Dengarkan hati, komunikasikan jujur.","Empati membuat ikatan kuat.","Fokus ke solusi daripada menyalahkan."]
   };
+
   const math = msg=>{
     try{
       const m = msg.match(/(-?\d+)\s*([\+\-\*\/])\s*(-?\d+)/);
-      if(!m) return null;
-      const a=+m[1],b=+m[3],op=m[2];
-      if(op==="+") return a+b;
-      if(op==="-") return a-b;
-      if(op==="*") return a*b;
-      if(op==="/") return b===0?"tak terdefinisi":a/b;
+      if(m){ const a=+m[1], b=+m[3], op=m[2]; if(op==="+") return a+b; if(op==="-") return a-b; if(op==="*") return a*b; if(op==="/") return b===0?"tak terdefinisi":a/b; }
+      if(msg.startsWith("faktorial ")){ let n=parseInt(msg.split(" ")[1]); if(isNaN(n)||n<0) return "Input salah!"; let res=1; for(let i=2;i<=n;i++) res*=i; return res; }
+      if(msg.startsWith("deret ")){ let [_,start,end]=msg.split(" ").map(Number); if(isNaN(start)||isNaN(end)) return "Input salah!"; let arr=[]; for(let i=start;i<=end;i++) arr.push(i); return arr.join(","); }
+      if(msg.startsWith("if ")){ const m=msg.match(/if (.+) then (.+) else (.+)/); if(m){ let cond=m[1].replace(/\b(\d+)\b/g,"$1"), a=m[2], b=m[3]; try{ if(eval(cond)) return a; else return b; }catch(e){return "Error kondisi!";} } }
       return null;
     }catch(e){return null;}
   };
+
   async function getReply(input,memory){
     try{
       const msg = normalize(input);
-      if(msg==="/help") return `
-📌 Perintah YUZI STR FULL OFFLINE:
-- /clear → hapus chat
-- /help → daftar perintah
-- Tanya apa saja, AI jawab offline
-- Trigger: yuda, evan, pencipta
-- Math: 2 + 3, 5 * 6
-- Tips & humor: kata kunci tips, humor
-`;
-      if(msg.startsWith("ingat ")){
-        const note = msg.slice(6).trim();
-        memory.push({type:"ai",text:`📝 Reminder tersimpan: ${note}`});
-        return `Aku sudah mengingat: "${note}"`;
-      }
-      if(msg.includes("fakta")) return pick([
-        "Tahukah kamu? Otak manusia bisa menghasilkan sekitar 20 watt listrik!",
-        "Tahukah kamu? Gurun Sahara dulunya adalah hutan tropis.",
-        "Tahukah kamu? Jantung manusia memompa ~5 liter darah per menit."
-      ]);
-      // ===== TRIGGER KHUSUS =====
-      if(msg.includes("yuda")) return "yuda pelenger abizzz jembut hahahh anjing";
+      if(msg.includes("yuda")) return "Yuda pelenger abizzz hahahhahahahah";
       if(msg.includes("evan")) return "anak sudi x mesa";
       if(msg.includes("pencipta") || msg.includes("pembuat ai") || (msg.includes("siapa") && (msg.includes("pembuat") || msg.includes("pencipta")))) return "Dimas Azka";
-
+      if(msg==="/help") return `📌 Perintah YUZI STR FULL OFFLINE:\n- /clear → hapus chat\n- /help → daftar perintah\n- Trigger: yuda, evan, pencipta\n- Math & Algoritma: 2 + 3, faktorial 5, deret 1 5, if 5>3 then A else B\n- Tips & humor: kata kunci tips, humor`;
+      if(msg.startsWith("ingat ")){ const note=msg.slice(6).trim(); memory.push({type:"ai",text:`📝 Reminder tersimpan: ${note}`}); return `Aku sudah mengingat: "${note}"`; }
+      if(msg.includes("fakta")) return pick(["Tahukah kamu? Otak manusia bisa menghasilkan sekitar 20 watt listrik!","Tahukah kamu? Gurun Sahara dulunya adalah hutan tropis.","Jantung manusia memompa ~5 liter darah per menit."]);
       if(/^(hai|halo|hi)\b/.test(msg)) return pick(["Halo! Aku YUZI STR 😎","Hai! Senang bertemu kamu!","Salam! Aku siap menjawab pertanyaanmu!"]);
       if(msg.includes("siapa kamu")) return "Aku YUZI STR FULL OFFLINE — Bisa jawab semua topik tanpa internet.";
       const m = math(msg); if(m!==null) return `Hasil: ${m}`;
@@ -133,46 +126,52 @@ const yuziBrain = (() => {
       return last ? `Aku mendengar "${last}", fallback offline aktif. DEWA mode siap memberi info.` :"Aku siap menjawab pertanyaanmu apapun, FULL OFFLINE DEWA MODE aktif.";
     }catch(e){console.error("Otak error:",e); return "⚠️ Otak error fallback offline aktif.";}
   }
+
   return {getReply};
 })();
 
-// ====== UTILITY ======
+// ===== CHAT & INPUT =====
 const chat=document.getElementById("chat");
 const input=document.getElementById("input");
 const sendBtn=document.getElementById("sendBtn");
 const themeBtn=document.getElementById("themeToggle");
 
+// ===== TTS STABIL =====
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices(); if(!voices.length){speechSynthesis.onvoiceschanged = ()=>{ voices = speechSynthesis.getVoices();};} }
+loadVoices();
+function speak(text){ if(!text) return; const utter = new SpeechSynthesisUtterance(text); utter.lang="id-ID"; utter.pitch=1.1; utter.rate=1; utter.volume=1; if(voices.length){utter.voice = voices.find(v=>v.lang.includes("id")) || voices[0];} speechSynthesis.speak(utter); }
+
+// ===== SEND FUNCTION DENGAN KEAMANAN EKSTRA =====
 async function send(){
-  const text=input.value.trim(); if(!text) return;
-  addMsg(text,"user"); memory.push({type:"user",text}); saveMemory(); input.value="";
-  if(text==="/clear"){ chat.innerHTML=""; memory=[]; saveMemory(); addMsg("🧹 Chat dibersihkan.","ai"); return; }
-  let reply;
-  try{ reply=await yuziBrain.getReply(text,memory); }catch(e){reply="⚠️ Otak error fallback offline aktif.";}
-  addMsg(reply,"ai"); memory.push({type:"ai",text:reply}); saveMemory();
-  // TTS natural
-  const utter=new SpeechSynthesisUtterance(reply);
-  utter.lang="id-ID"; utter.pitch=1.1; utter.rate=1; utter.volume=1;
-  const voices=speechSynthesis.getVoices();
-  if(voices.length) utter.voice=voices.find(v=>v.lang.includes("id"))||voices[0];
-  speechSynthesis.speak(utter);
+    const text=input.value.trim(); if(!text) return;
+
+    const now = Date.now();
+    if(now < lockUntil){ addMsg("⏳ Terlalu cepat, tunggu sebentar sebelum mengirim lagi.","ai"); return; }
+    if(text.length>300){ addMsg("❌ Pesan terlalu panjang!","ai"); input.value=""; return; }
+    if(/<[^>]*script|<[^>]+>/i.test(text)){ blockedUsers.push(text); saveBlocked(); addMsg("❌ Input mencurigakan, diblokir permanen.","ai"); input.value=""; return; }
+    if(now - lastSent < RATE_LIMIT){ addMsg("⏳ Tunggu sebentar sebelum mengirim lagi.","ai"); lockUntil = now + 5000; return; }
+    lastSent = now;
+    if(blockedUsers.includes(text) || isBlocked(text)){ if(!blockedUsers.includes(text)){ blockedUsers.push(text); saveBlocked(); } addMsg("❌ Anda diblokir karena chat tidak sopan.","ai"); input.value=""; return; }
+
+    addMsg(escapeInput(text),"user"); memory.push({type:"user",text}); saveMemory(); input.value="";
+    if(text==="/clear"){ chat.innerHTML=""; memory=[]; saveMemory(); addMsg("🧹 Chat dibersihkan.","ai"); return; }
+
+    let reply;
+    try{ reply=await yuziBrain.getReply(text,memory); }catch(e){reply="⚠️ Otak error fallback offline aktif.";}
+    addMsg(reply,"ai"); memory.push({type:"ai",text:reply}); saveMemory();
+    speak(reply);
 }
-sendBtn.onclick=send;
+sendBtn.onclick = send;
 input.addEventListener("keydown",e=>e.key==="Enter" && send());
 
-// ====== THEME ======
-function setTheme(theme){
-  if(theme==="dark"){document.body.classList.add("dark");document.body.classList.remove("light");themeBtn.textContent="☀️";}
-  else{document.body.classList.add("light");document.body.classList.remove("dark");themeBtn.textContent="🌙";}
-  localStorage.setItem("YUZI_THEME",theme);
-}
-const savedTheme=localStorage.getItem("YUZI_THEME")||((new Date().getHours()>=7&&new Date().getHours()<19)?"light":"dark");
-setTheme(savedTheme);
-themeBtn.onclick=()=>{setTheme(document.body.classList.contains("dark")?"light":"dark");}
+// ===== THEME FIX =====
+function applyTheme(theme){ document.body.classList.remove("dark","light"); if(theme==="dark"){ document.body.classList.add("dark"); themeBtn.textContent="☀️"; } else{ document.body.classList.add("light"); themeBtn.textContent="🌙"; } localStorage.setItem("YUZI_THEME", theme);}
+const savedTheme = localStorage.getItem("YUZI_THEME"); if(savedTheme){ applyTheme(savedTheme); } else{ const hour = new Date().getHours(); applyTheme(hour>=7&&hour<19?"light":"dark"); }
+themeBtn.onclick = () => { applyTheme(document.body.classList.contains("dark")?"light":"dark"); };
 
-// ====== LOAD MEMORY ======
+// ===== LOAD MEMORY =====
 memory.forEach(m=>addMsg(m.text,m.type));
-
-// ====== STARTUP TTS HANYA SETELAH INTERAKSI ======
 addMsg("Klik tombol Kirim untuk memulai percakapan.","ai");
 </script>
 </body>
